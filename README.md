@@ -16,3 +16,7 @@ Problems 11 to 15 must use recursion.
 ```
 ./submit
 ```
+
+## No Codespace?
+
+On your fork's GitHub page press `.` to edit in the browser. Commit your changes, then click **Contribute → Open pull request** with your full name as the title. The pull request's **Checks** tab shows your results and updates on every commit.
