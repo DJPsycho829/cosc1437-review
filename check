@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")" || exit 1
+
+RECURSIVE="P11 P12 P13 P14 P15"
+BUILD=.build
+GREEN=$'\e[32m'; RED=$'\e[31m'; YELLOW=$'\e[33m'; RESET=$'\e[0m'
+pass=0
+total=0
+
+for file in problems/P*.java; do
+    name=$(basename "$file" .java)
+    num=$((10#${name:1:2}))
+    if [ -n "$1" ] && [ "$num" -ne "$((10#$1))" ]; then
+        continue
+    fi
+    total=$((total + 1))
+
+    rm -rf "$BUILD"
+    mkdir -p "$BUILD"
+    if ! errors=$(javac -d "$BUILD" -sourcepath problems "$file" .tests/T.java ".tests/${name}Test.java" 2>&1); then
+        echo "${YELLOW}COMPILE ERROR${RESET} $name"
+        echo "$errors" | head -n 8 | sed 's/^/  /'
+        continue
+    fi
+
+    if [[ " $RECURSIVE " == *" ${name:0:3} "* ]] && sed 's://.*$::' "$file" | grep -Eqw 'for|while'; then
+        echo "${RED}FAIL${RESET}          $name"
+        echo "  use recursion, not a loop"
+        continue
+    fi
+
+    output=$(timeout 10 java -cp "$BUILD" "${name}Test" 2>&1)
+    status=$?
+    if [ "$status" -eq 0 ]; then
+        echo "${GREEN}PASS${RESET}          $name"
+        pass=$((pass + 1))
+    else
+        echo "${RED}FAIL${RESET}          $name"
+        if [ "$status" -eq 124 ]; then
+            echo "  took too long (infinite loop?)"
+        fi
+        echo "$output" | head -n 12
+    fi
+done
+
+rm -rf "$BUILD"
+if [ "$total" -eq 0 ]; then
+    echo "No problem number $1"
+    exit 1
+fi
+echo
+echo "$pass/$total passing"
+[ "$pass" -eq "$total" ]

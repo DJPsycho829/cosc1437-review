@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        ".tests": true,
+        ".build": true
+    }
+}
