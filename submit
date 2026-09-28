@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")" || exit 1
+
+UPSTREAM=copperx/cosc1437-review
+origin=$(git remote get-url origin)
+owner=$(echo "$origin" | sed -E 's#^.*github\.com[:/]([^/]+)/.*$#\1#')
+repo=$(basename "$origin" .git)
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$owner/$repo" = "$UPSTREAM" ]; then
+    echo "This is not your fork. Fork $UPSTREAM first and work in your fork."
+    exit 1
+fi
+
+read -r -p "Your full name: " name
+if [ -z "${name// /}" ]; then
+    echo "A name is required."
+    exit 1
+fi
+
+score=$(./check | tail -n 1)
+echo "$score"
+
+git add -A
+git commit -q -m "Submission: $name" || true
+if ! git push -q origin "$branch"; then
+    echo "Push failed. Ask your instructor."
+    exit 1
+fi
+
+existing=$(gh pr list --repo "$UPSTREAM" --head "$branch" --state open --json number,headRepositoryOwner \
+    --jq ".[] | select(.headRepositoryOwner.login == \"$owner\") | .number" 2>/dev/null)
+if [ -n "$existing" ]; then
+    echo "Submission updated (pull request #$existing)."
+    exit 0
+fi
+
+if gh pr create --repo "$UPSTREAM" --base main --head "$owner:$branch" --title "$name" --body "$score" >/dev/null 2>&1; then
+    echo "Submitted."
+else
+    echo "Open this link and click \"Create pull request\" to finish:"
+    echo "https://github.com/$UPSTREAM/compare/main...$owner:$repo:$branch?expand=1&title=${name// /%20}"
+fi
