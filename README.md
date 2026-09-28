@@ -10,3 +10,8 @@
 ```
 
 Problems 11 to 15 must use recursion.
+
+## Submit
+
+1. Push your work: `git add . && git commit -m "done" && git push`
+2. On your fork's GitHub page, click **Contribute → Open pull request**. Use your full name as the title.
