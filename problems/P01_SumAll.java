@@ -8,6 +8,6 @@ public class P01_SumAll {
                 sum += this.a[i][j];
             }
         }
-        return 0;
+        return sum;
     }
 }
